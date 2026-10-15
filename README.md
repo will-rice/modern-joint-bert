@@ -30,7 +30,7 @@ SNIPS test split, best-dev-sentence-accuracy checkpoint, fp32. Intent accuracy /
 
 Paper settings: batch 128, lr 5e-5, dropout 0.1, 30 epochs, max length 50, BERT pooler for the intent head.
 
-**Caveat:** every row except the grad-clip one was trained without gradient clipping. The reference implementation ([monologg/JointBERT](https://github.com/monologg/JointBERT)) clips to norm 1.0 every step, and `Config.grad_clip_norm` now does the same, so those rows predate that fix and need re-running. The reference's own SNIPS numbers (99.14 / 96.90 / 93.00) are the best of several 5-10 epoch runs scored on test, so they are optimistic. Ours select on dev and average seeds.
+**Caveat:** every row except the grad-clip one was trained without gradient clipping. The reference implementation ([monologg/JointBERT](https://github.com/monologg/JointBERT)) clips to norm 1.0 every step, and `Config.grad_clip_norm` now does the same, so those rows predate that fix and need re-running. The two ModernBERT rows were also tokenized word by word, which drops the leading-space marker its BPE tokenizer expects (BERT is unaffected); the loader now tokenizes whole utterances, so they need re-running for that reason too. The reference's own SNIPS numbers (99.14 / 96.90 / 93.00) are the best of several 5-10 epoch runs scored on test, so they are optimistic. Ours select on dev and average seeds.
 
 Findings so far:
 
