@@ -4,14 +4,14 @@ Settings follow the paper (Sec. 4.2): bert-base-uncased, max length 50,
 batch size 128, Adam with lr 5e-5, dropout 0.1, and 30 epochs, which is the
 setting behind its 98.6 intent / 97.0 slot F1 result. The paper does not state
 the LR schedule; like the authors' reference implementation we use linear decay
-with no warmup and no weight decay. The BERT pooler feeds the intent head. Runs
-several seeds and reports the mean.
+with no warmup and no weight decay. Gradients are clipped to norm 1.0 as in the
+reference implementation. The BERT pooler feeds the intent head. One run, like
+the paper.
 """
 
 import logging
 from argparse import ArgumentParser
 from pathlib import Path
-from statistics import mean
 
 from dotenv import load_dotenv
 
@@ -30,11 +30,10 @@ PAPER_CONFIG = Config(
     max_epochs=30,
     early_stopping_patience=30,
 )
-SEEDS = (42, 43, 44)
 
 
 def main() -> None:
-    """Train PAPER_CONFIG for each seed and log per-seed and mean test metrics."""
+    """Train PAPER_CONFIG once and log dev and test metrics."""
     parser = ArgumentParser(description="Reproduce JointBERT on SNIPS.")
     parser.add_argument("data_root", type=Path)
     parser.add_argument("--project", default="modern-joint-bert", type=str)
@@ -44,25 +43,16 @@ def main() -> None:
     load_dotenv()
     logging.basicConfig(level=logging.INFO)
 
-    results = [
-        train(
-            PAPER_CONFIG.model_copy(update={"seed": seed}),
-            args.data_root,
-            args.project,
-            args.log_root,
-            num_devices=1,
-            num_workers=args.num_workers,
-            tag=f"paper-seed{seed}",
-        )
-        for seed in SEEDS
-    ]
-    for name in ("test/intent_acc", "test/slot_f1", "test/sentence_acc"):
-        logging.info(
-            "%s: %s mean=%.4f",
-            name,
-            [round(result[name], 4) for result in results],
-            mean(result[name] for result in results),
-        )
+    metrics = train(
+        PAPER_CONFIG,
+        args.data_root,
+        args.project,
+        args.log_root,
+        num_devices=1,
+        num_workers=args.num_workers,
+        tag="paper",
+    )
+    logging.info(metrics)
 
 
 if __name__ == "__main__":
