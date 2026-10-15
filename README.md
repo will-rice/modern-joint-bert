@@ -42,7 +42,7 @@ SNIPS (the JointBERT split, 13,084 / 700 / 700) is downloaded into `data_root` o
 
 ```bash
 uv run train data/snips --base_model answerdotai/ModernBERT-base
-uv run train data/snips --fast_dev_run  # smoke test
+uv run sweep data/snips  # one-factor-at-a-time ablations, ranked on dev
 ```
 
 Checkpoints are selected on dev sentence accuracy; test metrics are logged to wandb at the end.
