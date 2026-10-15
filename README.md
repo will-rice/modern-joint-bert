@@ -18,7 +18,7 @@ Original JointBERT results on SNIPS (BERT-base):
 
 ## Status
 
-Scaffolded from [ml-template](https://github.com/will-rice/ml-template). Data loading, model, and evaluation are not implemented yet.
+Dataset loading, the JointBERT model with a swappable `AutoModel` encoder, and metrics are implemented. No full-training results yet.
 
 ## Quick Start
 
@@ -29,15 +29,27 @@ uv run pre-commit install
 uv run pytest
 ```
 
+## Usage
+
+SNIPS (the JointBERT split, 13,084 / 700 / 700) is downloaded into `data_root` on first run. The encoder is selected with `--base_model` (any Hugging Face encoder with a fast tokenizer whose first token summarizes the sequence; default `answerdotai/ModernBERT-base`). Hyperparameters live in `config.py` and are shared across encoders so comparisons are clean ablations.
+
+```bash
+uv run train data/snips --base_model answerdotai/ModernBERT-base
+uv run train data/snips --fast_dev_run  # smoke test
+```
+
+Checkpoints are selected on dev sentence accuracy; test metrics are logged to wandb at the end.
+
 ## Layout
 
 ```
 src/modern_joint_bert/
 ├── config.py            # Pydantic configuration
-├── lightning_module.py  # Lightning module
-├── datasets/            # SNIPS dataset
-├── modeling/            # Encoder + intent/slot heads
-└── scripts/train.py     # Training entry point (`uv run train`)
+├── metrics.py           # intent acc, slot F1 (seqeval), sentence acc
+├── lightning_module.py  # JointBertModule: joint loss, eval, optimizer
+├── datasets/snips.py    # SNIPS download, tokenization, label alignment
+├── modeling/joint_bert.py  # AutoModel encoder + intent/slot heads
+└── scripts/train.py     # `uv run train`
 ```
 
 ## License

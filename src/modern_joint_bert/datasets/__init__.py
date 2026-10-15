@@ -1,7 +1,19 @@
 """Datasets."""
 
-from typing import NamedTuple
+from modern_joint_bert.datasets.snips import (
+    IGNORE_INDEX,
+    Batch,
+    SnipsDataset,
+    SnipsLabels,
+    collate,
+    download_snips,
+)
 
-
-class Batch(NamedTuple):
-    """Batch of data."""
+__all__ = [
+    "IGNORE_INDEX",
+    "Batch",
+    "SnipsDataset",
+    "SnipsLabels",
+    "collate",
+    "download_snips",
+]
