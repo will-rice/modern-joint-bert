@@ -56,7 +56,9 @@ def test_metrics_perfect_and_partial() -> None:
     """Sentence accuracy needs both intent and every slot correct."""
     slots = ["O", "B-a"]
     labels = torch.tensor([[IGNORE_INDEX, 0, 1], [IGNORE_INDEX, 1, 0]])
-    logits = torch.nn.functional.one_hot(torch.tensor([[0, 0, 1], [0, 0, 0]]), 2).float()
+    logits = torch.nn.functional.one_hot(
+        torch.tensor([[0, 0, 1], [0, 0, 0]]), 2
+    ).float()
     predicted, gold = word_level_tags(logits, labels, slots)
     assert gold == [["O", "B-a"], ["B-a", "O"]]
     assert predicted == [["O", "B-a"], ["O", "O"]]

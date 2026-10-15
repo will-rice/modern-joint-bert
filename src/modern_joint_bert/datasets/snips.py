@@ -97,14 +97,14 @@ class SnipsDataset(Dataset):
             previous_word = word
         return {
             "input_ids": torch.tensor(encoding["input_ids"]),
-            "intent_label": torch.tensor(self.labels.intents.index(self.intents[index])),
+            "intent_label": torch.tensor(
+                self.labels.intents.index(self.intents[index])
+            ),
             "slot_labels": slot_labels,
         }
 
 
-def collate(
-    items: list[dict[str, torch.Tensor]], pad_token_id: int
-) -> Batch:
+def collate(items: list[dict[str, torch.Tensor]], pad_token_id: int) -> Batch:
     """Pad a list of utterances into a Batch."""
     input_ids = pad_sequence(
         [item["input_ids"] for item in items],

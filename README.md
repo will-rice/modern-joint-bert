@@ -16,9 +16,16 @@ Original JointBERT results on SNIPS (BERT-base):
 | ----------- | ------- | ------------- |
 | 98.6        | 97.0    | 92.8          |
 
-## Status
+## Results
 
-Dataset loading, the JointBERT model with a swappable `AutoModel` encoder, and metrics are implemented. No full-training results yet.
+Single run, seed 42, default `config.py`, fp32, test split, best dev-sentence-accuracy checkpoint:
+
+| Encoder                     | Intent acc. | Slot F1 | Sentence acc. |
+| --------------------------- | ----------- | ------- | ------------- |
+| BERT-base (JointBERT paper) | 98.6        | 97.0    | 92.8          |
+| ModernBERT-base             | 97.6        | 92.6    | 84.7          |
+
+The first ModernBERT-base run is below the paper baseline, so it is untuned: no learning-rate or epoch sweep, a single seed, and the intent head pools the first token. Next steps are tuning shared hyperparameters and comparing more encoders.
 
 ## Quick Start
 
