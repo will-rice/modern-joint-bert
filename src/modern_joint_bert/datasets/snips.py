@@ -7,7 +7,7 @@ from urllib.request import urlretrieve
 import torch
 from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import Dataset
-from transformers import PreTrainedTokenizerFast
+from transformers import PreTrainedTokenizerBase
 
 SNIPS_URL = "https://raw.githubusercontent.com/monologg/JointBERT/master/data/snips"
 SPLITS = ("train", "dev", "test")
@@ -61,7 +61,7 @@ class SnipsDataset(Dataset):
         self,
         data_root: Path,
         split: str,
-        tokenizer: PreTrainedTokenizerFast,
+        tokenizer: PreTrainedTokenizerBase,
         max_length: int,
     ) -> None:
         self.tokenizer = tokenizer

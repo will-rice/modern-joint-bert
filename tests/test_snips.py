@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 import torch
-from transformers import PreTrainedTokenizerFast
+from transformers import AutoTokenizer, PreTrainedTokenizerBase
 
 from modern_joint_bert.config import Config
 from modern_joint_bert.datasets import (
@@ -16,14 +16,16 @@ from modern_joint_bert.datasets import (
 from modern_joint_bert.metrics import compute_metrics, word_level_tags
 
 
-@pytest.fixture(scope="module")
-def dataset(tmp_path_factory: pytest.TempPathFactory) -> SnipsDataset:
-    """Real SNIPS train split with the default model's tokenizer."""
+@pytest.fixture(scope="module", params=[Config().base_model, "bert-base-uncased"])
+def dataset(
+    request: pytest.FixtureRequest, tmp_path_factory: pytest.TempPathFactory
+) -> SnipsDataset:
+    """Real SNIPS train split with the default and paper models' tokenizers."""
     data_root: Path = tmp_path_factory.mktemp("snips")
     download_snips(data_root)
-    config = Config()
-    tokenizer = PreTrainedTokenizerFast.from_pretrained(config.base_model)
-    return SnipsDataset(data_root, "train", tokenizer, config.max_length)
+    tokenizer = AutoTokenizer.from_pretrained(request.param)
+    assert isinstance(tokenizer, PreTrainedTokenizerBase)
+    return SnipsDataset(data_root, "train", tokenizer, Config().max_length)
 
 
 def test_snips_sizes_and_labels(dataset: SnipsDataset) -> None:
@@ -46,6 +48,7 @@ def test_slot_labels_align_to_first_subword(dataset: SnipsDataset) -> None:
 def test_collate_pads(dataset: SnipsDataset) -> None:
     """Collate pads ids and masks padding positions out."""
     pad_id = dataset.tokenizer.pad_token_id
+    assert isinstance(pad_id, int)
     batch = collate([dataset[0], dataset[1]], pad_token_id=pad_id)
     assert batch.input_ids.shape == batch.slot_labels.shape
     assert (batch.attention_mask == (batch.input_ids != pad_id)).all()

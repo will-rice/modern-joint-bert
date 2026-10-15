@@ -12,7 +12,7 @@ from lightning import Trainer, seed_everything
 from lightning.pytorch.callbacks import EarlyStopping, ModelCheckpoint
 from lightning.pytorch.loggers import WandbLogger
 from torch.utils.data import DataLoader
-from transformers import PreTrainedTokenizerFast
+from transformers import AutoTokenizer, PreTrainedTokenizerBase
 
 from modern_joint_bert.config import Config
 from modern_joint_bert.datasets import SnipsDataset, collate, download_snips
@@ -78,7 +78,8 @@ def train(
     experiment_path.mkdir(exist_ok=True, parents=True)
 
     download_snips(data_root)
-    tokenizer = PreTrainedTokenizerFast.from_pretrained(config.base_model)
+    tokenizer = AutoTokenizer.from_pretrained(config.base_model)
+    assert isinstance(tokenizer, PreTrainedTokenizerBase)
     datasets = {
         split: SnipsDataset(data_root, split, tokenizer, config.max_length)
         for split in ("train", "dev", "test")
