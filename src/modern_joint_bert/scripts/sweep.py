@@ -31,6 +31,9 @@ def main() -> None:
     parser = ArgumentParser(description="Run JointBERT ablations on SNIPS.")
     parser.add_argument("data_root", type=Path)
     parser.add_argument("--base_model", default=Config().base_model, type=str)
+    parser.add_argument(
+        "--runs", nargs="+", choices=list(ABLATIONS), default=list(ABLATIONS)
+    )
     parser.add_argument("--project", default="modern-joint-bert", type=str)
     parser.add_argument("--log_root", default="logs", type=Path)
     parser.add_argument("--num_workers", default=4, type=int)
@@ -39,7 +42,8 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO)
 
     results = {}
-    for tag, ablation in ABLATIONS.items():
+    for tag in args.runs:
+        ablation = ABLATIONS[tag]
         config = ablation.model_copy(update={"base_model": args.base_model})
         results[tag] = train(
             config,
