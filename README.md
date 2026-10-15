@@ -20,20 +20,21 @@ Original JointBERT results on SNIPS (BERT-base):
 
 SNIPS test split, best-dev-sentence-accuracy checkpoint, fp32. Intent accuracy / slot F1 / sentence accuracy (%).
 
-| Model                                                     | Intent | Slot F1 | Sentence |
-| --------------------------------------------------------- | ------ | ------- | -------- |
-| JointBERT paper, BERT-base                                | 98.6   | 97.0    | 92.8     |
-| BERT-base, paper settings (`uv run reproduce`, mean of 3) | 98.1   | 95.3    | 89.2     |
-| ModernBERT-base, default config (1 seed)                  | 98.6   | 93.1    | 84.4     |
-| ModernBERT-base, lr 2e-4 (1 seed, best dev in ablations)  | 98.4   | 94.6    | 88.6     |
+| Model                                                    | Intent | Slot F1 | Sentence |
+| -------------------------------------------------------- | ------ | ------- | -------- |
+| JointBERT paper, BERT-base                               | 98.6   | 97.0    | 92.8     |
+| BERT-base, paper settings, no grad clipping (mean of 3)  | 98.1   | 95.3    | 89.2     |
+| BERT-base, paper settings + grad clip 1.0 (1 run)        | 98.4   | 95.8    | 90.6     |
+| ModernBERT-base, default config (1 seed)                 | 98.6   | 93.1    | 84.4     |
+| ModernBERT-base, lr 2e-4 (1 seed, best dev in ablations) | 98.4   | 94.6    | 88.6     |
 
 Paper settings: batch 128, lr 5e-5, dropout 0.1, 30 epochs, max length 50, BERT pooler for the intent head.
 
-**Caveat:** these four runs were trained without gradient clipping. The reference implementation ([monologg/JointBERT](https://github.com/monologg/JointBERT)) clips to norm 1.0 every step, and `Config.grad_clip_norm` now does the same, so the numbers above predate that fix and need re-running. The reference's own SNIPS numbers (99.14 / 96.90 / 93.00) are the best of several 5-10 epoch runs scored on test, so they are optimistic. Ours select on dev and average seeds.
+**Caveat:** every row except the grad-clip one was trained without gradient clipping. The reference implementation ([monologg/JointBERT](https://github.com/monologg/JointBERT)) clips to norm 1.0 every step, and `Config.grad_clip_norm` now does the same, so those rows predate that fix and need re-running. The reference's own SNIPS numbers (99.14 / 96.90 / 93.00) are the best of several 5-10 epoch runs scored on test, so they are optimistic. Ours select on dev and average seeds.
 
 Findings so far:
 
-- The BERT-base reproduction lands 1.7 slot F1 and 3.6 sentence accuracy below the paper, so something in this pipeline or its unstated details (LR schedule, checkpoint selection, the intent representation) still differs.
+- Gradient clipping helps BERT-base (slot F1 95.3 to 95.8, sentence 89.2 to 90.6, though the first row is a 3-seed mean and the second a single run), but it still lands 1.2 slot F1 and 2.2 sentence accuracy below the paper, so something else in the pipeline or the paper's unstated details (LR schedule, checkpoint selection, the intent representation) still differs.
 - ModernBERT-base needs a much higher learning rate than BERT (dev sentence accuracy 76.4 at 2e-5, 83.4 at 5e-5, 87.7 at 2e-4) and is roughly on par with the BERT control at 2e-4. The best rate may be above 2e-4.
 - Run-to-run noise is about a point, so single-seed differences below that are not meaningful.
 
