@@ -30,6 +30,8 @@ SNIPS test split, best-dev-sentence-accuracy checkpoint, fp32, one seed unless n
 
 Paper settings: batch 128, lr 5e-5, dropout 0.1, 30 epochs, max length 50, BERT pooler for the intent head.
 
+UltraBERT-150M (`dmis-lab/UltraBERT-150M`, first-token pooling) uses the same config as ModernBERT, run with `uv run sweep data/snips --base_model dmis-lab/UltraBERT-150M --runs baseline lr2e-4`. Dev sentence accuracy was 90.4 at lr 5e-5 and 85.1 at 2e-4, so unlike ModernBERT it prefers the lower rate.
+
 ### ModernBERT-base ablations
 
 `uv run sweep`: each run changes one field from the default config and is ranked on dev sentence accuracy (test shown for reference, never used to select).
@@ -50,6 +52,7 @@ Findings:
 - Two pipeline bugs were inflating ModernBERT's gap. It was trained without gradient clipping (the reference implementation clips to norm 1.0), and its BPE tokenizer was fed word by word, which drops the leading-space marker the model was pretrained with. Fixing both took the default config from 93.1 / 84.4 (slot F1 / sentence) to 95.3 / 89.9.
 - With the fixes, ModernBERT-base at lr 2e-4 is on par with the BERT-base control (96.0 / 91.1 vs 95.8 / 90.6), within noise. Higher learning rates still help (dev 84.7 at 2e-5, 87.6 at 5e-5, 89.6 at 2e-4), and the optimum may be above 2e-4.
 - Mean pooling and first-token pooling are within noise of each other for ModernBERT.
+- UltraBERT-150M at the default config (96.3 slot F1, 91.4 sentence) is the best result so far, about 1 point above the BERT control and ModernBERT, which is at the edge of the noise level (one seed). It still trails the paper's 97.0 / 92.8.
 - Both BERT-base and ModernBERT-base are still 1+ slot F1 and 2+ sentence points below the paper's 97.0 / 92.8, so something in the pipeline or the paper's unstated details (LR schedule, checkpoint selection, the intent representation) still differs. The reference implementation's own SNIPS numbers (99.14 / 96.90 / 93.00) are the best of several runs scored on test, so they are optimistic.
 
 ## Quick Start
