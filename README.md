@@ -18,27 +18,39 @@ Original JointBERT results on SNIPS (BERT-base):
 
 ## Results
 
-SNIPS test split, best-dev-sentence-accuracy checkpoint, fp32. Intent accuracy / slot F1 / sentence accuracy (%).
+SNIPS test split, best-dev-sentence-accuracy checkpoint, fp32, one seed unless noted. Intent accuracy / slot F1 / sentence accuracy (%). Run-to-run noise is about a point, so differences smaller than that are not meaningful.
 
-| Model                                                    | Intent | Slot F1 | Sentence |
-| -------------------------------------------------------- | ------ | ------- | -------- |
-| JointBERT paper, BERT-base                               | 98.6   | 97.0    | 92.8     |
-| BERT-base, paper settings, no grad clipping (mean of 3)  | 98.1   | 95.3    | 89.2     |
-| BERT-base, paper settings + grad clip 1.0 (1 run)        | 98.4   | 95.8    | 90.6     |
-| ModernBERT-base, default config (1 seed)                 | 98.6   | 93.1    | 84.4     |
-| ModernBERT-base, lr 2e-4 (1 seed, best dev in ablations) | 98.4   | 94.6    | 88.6     |
+| Model                                                   | Intent | Slot F1 | Sentence |
+| ------------------------------------------------------- | ------ | ------- | -------- |
+| JointBERT paper, BERT-base                              | 98.6   | 97.0    | 92.8     |
+| BERT-base, paper settings, no grad clipping (mean of 3) | 98.1   | 95.3    | 89.2     |
+| BERT-base, paper settings + grad clip 1.0               | 98.4   | 95.8    | 90.6     |
+| ModernBERT-base, default config (lr 5e-5)               | 98.3   | 95.3    | 89.9     |
+| ModernBERT-base, lr 2e-4 (best dev in ablations)        | 98.1   | 96.0    | 91.1     |
 
 Paper settings: batch 128, lr 5e-5, dropout 0.1, 30 epochs, max length 50, BERT pooler for the intent head.
 
-**Caveat:** every row except the grad-clip one was trained without gradient clipping. The reference implementation ([monologg/JointBERT](https://github.com/monologg/JointBERT)) clips to norm 1.0 every step, and `Config.grad_clip_norm` now does the same, so those rows predate that fix and need re-running. The two ModernBERT rows were also tokenized word by word, which drops the leading-space marker its BPE tokenizer expects (BERT is unaffected); the loader now tokenizes whole utterances, so they need re-running for that reason too. The reference's own SNIPS numbers (99.14 / 96.90 / 93.00) are the best of several 5-10 epoch runs scored on test, so they are optimistic. Ours select on dev and average seeds.
+### ModernBERT-base ablations
 
-Findings so far:
+`uv run sweep`: each run changes one field from the default config and is ranked on dev sentence accuracy (test shown for reference, never used to select).
 
-- Gradient clipping helps BERT-base (slot F1 95.3 to 95.8, sentence 89.2 to 90.6, though the first row is a 3-seed mean and the second a single run), but it still lands 1.2 slot F1 and 2.2 sentence accuracy below the paper, so something else in the pipeline or the paper's unstated details (LR schedule, checkpoint selection, the intent representation) still differs.
-- ModernBERT-base needs a much higher learning rate than BERT (dev sentence accuracy 76.4 at 2e-5, 83.4 at 5e-5, 87.7 at 2e-4) and is roughly on par with the BERT control at 2e-4. The best rate may be above 2e-4.
-- Run-to-run noise is about a point, so single-seed differences below that are not meaningful.
+| Run       | Dev sent. | Test intent | Test slot F1 | Test sent. |
+| --------- | --------- | ----------- | ------------ | ---------- |
+| lr2e-4    | 89.6      | 98.1        | 96.0         | 91.1       |
+| bs16      | 89.1      | 98.0        | 95.5         | 89.4       |
+| mean-pool | 89.0      | 97.7        | 95.5         | 90.0       |
+| patience6 | 88.9      | 98.6        | 94.7         | 88.9       |
+| slotw2    | 88.9      | 98.3        | 95.6         | 90.3       |
+| lr1e-4    | 88.1      | 98.1        | 95.9         | 91.0       |
+| baseline  | 87.6      | 98.3        | 95.3         | 89.9       |
+| lr2e-5    | 84.7      | 97.6        | 92.7         | 84.1       |
 
-Ablations (`uv run sweep`) change one field at a time and are ranked on dev, never test.
+Findings:
+
+- Two pipeline bugs were inflating ModernBERT's gap. It was trained without gradient clipping (the reference implementation clips to norm 1.0), and its BPE tokenizer was fed word by word, which drops the leading-space marker the model was pretrained with. Fixing both took the default config from 93.1 / 84.4 (slot F1 / sentence) to 95.3 / 89.9.
+- With the fixes, ModernBERT-base at lr 2e-4 is on par with the BERT-base control (96.0 / 91.1 vs 95.8 / 90.6), within noise. Higher learning rates still help (dev 84.7 at 2e-5, 87.6 at 5e-5, 89.6 at 2e-4), and the optimum may be above 2e-4.
+- Mean pooling and first-token pooling are within noise of each other for ModernBERT.
+- Both BERT-base and ModernBERT-base are still 1+ slot F1 and 2+ sentence points below the paper's 97.0 / 92.8, so something in the pipeline or the paper's unstated details (LR schedule, checkpoint selection, the intent representation) still differs. The reference implementation's own SNIPS numbers (99.14 / 96.90 / 93.00) are the best of several runs scored on test, so they are optimistic.
 
 ## Quick Start
 
