@@ -18,14 +18,24 @@ Original JointBERT results on SNIPS (BERT-base):
 
 ## Results
 
-Single run, seed 42, default `config.py`, fp32, test split, best dev-sentence-accuracy checkpoint:
+SNIPS test split, best-dev-sentence-accuracy checkpoint, fp32. Intent accuracy / slot F1 / sentence accuracy (%).
 
-| Encoder                     | Intent acc. | Slot F1 | Sentence acc. |
-| --------------------------- | ----------- | ------- | ------------- |
-| BERT-base (JointBERT paper) | 98.6        | 97.0    | 92.8          |
-| ModernBERT-base             | 97.6        | 92.6    | 84.7          |
+| Model                                                     | Intent | Slot F1 | Sentence |
+| --------------------------------------------------------- | ------ | ------- | -------- |
+| JointBERT paper, BERT-base                                | 98.6   | 97.0    | 92.8     |
+| BERT-base, paper settings (`uv run reproduce`, mean of 3) | 98.1   | 95.3    | 89.2     |
+| ModernBERT-base, default config (1 seed)                  | 98.6   | 93.1    | 84.4     |
+| ModernBERT-base, lr 2e-4 (1 seed, best dev in ablations)  | 98.4   | 94.6    | 88.6     |
 
-The first ModernBERT-base run is below the paper baseline, so it is untuned: no learning-rate or epoch sweep, a single seed, and the intent head pools the first token. Next steps are tuning shared hyperparameters and comparing more encoders.
+Paper settings: batch 128, lr 5e-5, dropout 0.1, 30 epochs, max length 50, BERT pooler for the intent head.
+
+Findings so far:
+
+- The BERT-base reproduction lands 1.7 slot F1 and 3.6 sentence accuracy below the paper, so something in this pipeline or its unstated details (LR schedule, checkpoint selection, the intent representation) still differs.
+- ModernBERT-base needs a much higher learning rate than BERT (dev sentence accuracy 76.4 at 2e-5, 83.4 at 5e-5, 87.7 at 2e-4) and is roughly on par with the BERT control at 2e-4. The best rate may be above 2e-4.
+- Run-to-run noise is about a point, so single-seed differences below that are not meaningful.
+
+Ablations (`uv run sweep`) change one field at a time and are ranked on dev, never test.
 
 ## Quick Start
 
