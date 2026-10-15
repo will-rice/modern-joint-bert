@@ -1,7 +1,7 @@
 [project]
-name = "template"
+name = "modern-joint-bert"
 version = "0.1.0"
-description = "A general purpose machine learning project template."
+description = "JointBERT intent classification and slot filling on SNIPS with modern embedding models."
 readme = "README.md"
 authors = [{ name = "Will Rice", email = "wrice20@gmail.com" }]
 requires-python = ">=3.13"
@@ -27,13 +27,13 @@ requires = ["uv_build>=0.12.18"]
 build-backend = "uv_build"
 
 [tool.uv.build-backend]
-module-name = ["template"]
+module-name = ["modern_joint_bert"]
 
 [tool.uv.sources]
 git-python = { git = "https://github.com/pynickle/git-python.git" }
 
 [tool.ruff.lint.isort]
-known-first-party = ["template"]
+known-first-party = ["modern_joint_bert"]
 
 [tool.ruff.lint]
 select = ["C", "E", "F", "I", "W", "D", "N", "B", "PTH", "ANN"]
@@ -44,4 +44,4 @@ exclude = [".venv"]
 convention = "google"
 
 [project.scripts]
-train = "template.scripts.train:main"
+train = "modern_joint_bert.scripts.train:main"

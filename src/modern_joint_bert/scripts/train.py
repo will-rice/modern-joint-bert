@@ -7,14 +7,14 @@ from dotenv import load_dotenv
 from git import Repo
 from lightning import seed_everything
 
-from template.config import Config
+from modern_joint_bert.config import Config
 
 
 def main() -> None:
     """Train script."""
     parser = ArgumentParser(description="Train script.")
     parser.add_argument("data_root", type=Path)
-    parser.add_argument("--project", default="template", type=str)
+    parser.add_argument("--project", default="modern-joint-bert", type=str)
     parser.add_argument("--num_devices", default=1, type=int)
     parser.add_argument("--num_workers", default=12, type=int)
     parser.add_argument("--log_root", default="logs", type=Path)
