@@ -19,7 +19,7 @@ dependencies = [
   "torchaudio>=2.11.0",
   "torchcodec>=0.16.0",
   "torchvision>=0.29.0",
-  "transformers>=5.19.0",
+  "transformers>=5.20.0",
   "ty>=0.0.83",
   "wandb>=0.30.0",
 ]

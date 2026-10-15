@@ -16,7 +16,10 @@ from modern_joint_bert.datasets import (
 from modern_joint_bert.metrics import compute_metrics, word_level_tags
 
 
-@pytest.fixture(scope="module", params=[Config().base_model, "bert-base-uncased"])
+@pytest.fixture(
+    scope="module",
+    params=[Config().base_model, "bert-base-uncased", "dmis-lab/UltraBERT-150M"],
+)
 def dataset(
     request: pytest.FixtureRequest, tmp_path_factory: pytest.TempPathFactory
 ) -> SnipsDataset:
@@ -51,7 +54,9 @@ def test_collate_pads(dataset: SnipsDataset) -> None:
     assert isinstance(pad_id, int)
     batch = collate([dataset[0], dataset[1]], pad_token_id=pad_id)
     assert batch.input_ids.shape == batch.slot_labels.shape
-    assert (batch.attention_mask == (batch.input_ids != pad_id)).all()
+    lengths = torch.tensor([len(dataset[0]["input_ids"]), len(dataset[1]["input_ids"])])
+    assert (batch.attention_mask.sum(1) == lengths).all()
+    assert (batch.attention_mask[:, 0] == 1).all()
     assert (batch.slot_labels[batch.attention_mask == 0] == IGNORE_INDEX).all()
 
 

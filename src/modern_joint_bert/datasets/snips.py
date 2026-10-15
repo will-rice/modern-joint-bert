@@ -105,15 +105,21 @@ class SnipsDataset(Dataset):
 
 
 def collate(items: list[dict[str, torch.Tensor]], pad_token_id: int) -> Batch:
-    """Pad a list of utterances into a Batch."""
-    input_ids = pad_sequence(
-        [item["input_ids"] for item in items],
-        batch_first=True,
-        padding_value=pad_token_id,
-    )
+    """Pad a list of utterances into a Batch.
+
+    The attention mask comes from sequence lengths, not from comparing ids to
+    the pad id, because some tokenizers reuse the pad id for a real token.
+    """
+    lengths = [len(item["input_ids"]) for item in items]
     return Batch(
-        input_ids=input_ids,
-        attention_mask=(input_ids != pad_token_id).long(),
+        input_ids=pad_sequence(
+            [item["input_ids"] for item in items],
+            batch_first=True,
+            padding_value=pad_token_id,
+        ),
+        attention_mask=(
+            torch.arange(max(lengths)) < torch.tensor(lengths).unsqueeze(1)
+        ).long(),
         intent_label=torch.stack([item["intent_label"] for item in items]),
         slot_labels=pad_sequence(
             [item["slot_labels"] for item in items],
