@@ -25,6 +25,7 @@ class JointBertModule(LightningModule):
             num_intents=len(labels.intents),
             num_slots=len(labels.slots),
             dropout=config.dropout,
+            pooling=config.pooling,
         )
         self.intent_correct: list[bool] = []
         self.predicted_tags: list[list[str]] = []

@@ -48,3 +48,4 @@ convention = "google"
 [project.scripts]
 train = "modern_joint_bert.scripts.train:main"
 sweep = "modern_joint_bert.scripts.sweep:main"
+reproduce = "modern_joint_bert.scripts.reproduce:main"

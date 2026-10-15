@@ -14,14 +14,15 @@ from dotenv import load_dotenv
 from modern_joint_bert.config import Config
 from modern_joint_bert.scripts.train import train
 
-ABLATIONS: dict[str, dict[str, float | int]] = {
-    "baseline": {},
-    "lr2e-5": {"learning_rate": 2e-5},
-    "lr1e-4": {"learning_rate": 1e-4},
-    "lr2e-4": {"learning_rate": 2e-4},
-    "bs16": {"batch_size": 16},
-    "patience6": {"early_stopping_patience": 6, "max_epochs": 30},
-    "slotw2": {"slot_loss_weight": 2.0},
+ABLATIONS: dict[str, Config] = {
+    "baseline": Config(),
+    "lr2e-5": Config(learning_rate=2e-5),
+    "lr1e-4": Config(learning_rate=1e-4),
+    "lr2e-4": Config(learning_rate=2e-4),
+    "bs16": Config(batch_size=16),
+    "patience6": Config(early_stopping_patience=6, max_epochs=30),
+    "slotw2": Config(slot_loss_weight=2.0),
+    "mean-pool": Config(pooling="mean"),
 }
 
 
@@ -38,8 +39,8 @@ def main() -> None:
     logging.basicConfig(level=logging.INFO)
 
     results = {}
-    for tag, overrides in ABLATIONS.items():
-        config = Config(base_model=args.base_model, **overrides)
+    for tag, ablation in ABLATIONS.items():
+        config = ablation.model_copy(update={"base_model": args.base_model})
         results[tag] = train(
             config,
             args.data_root,

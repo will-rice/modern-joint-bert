@@ -1,6 +1,10 @@
 """Main config class."""
 
+from typing import Literal
+
 from pydantic import BaseModel
+
+Pooling = Literal["pooler", "cls", "mean"]
 
 
 class Config(BaseModel):
@@ -24,3 +28,5 @@ class Config(BaseModel):
 
     # Model
     base_model: str = "answerdotai/ModernBERT-base"
+    # Intent representation: encoder pooler head, first token, or masked mean.
+    pooling: Pooling = "cls"
