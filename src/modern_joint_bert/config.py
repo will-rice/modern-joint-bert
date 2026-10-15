@@ -24,6 +24,7 @@ class Config(BaseModel):
     weight_decay: float = 1e-2
     warmup_ratio: float = 0.1
     dropout: float = 0.1
+    grad_clip_norm: float = 1.0
     slot_loss_weight: float = 1.0
 
     # Model

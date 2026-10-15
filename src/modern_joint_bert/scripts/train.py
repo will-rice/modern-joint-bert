@@ -103,6 +103,7 @@ def train(
         accelerator="auto",
         devices=num_devices,
         max_epochs=config.max_epochs,
+        gradient_clip_val=config.grad_clip_norm,
         logger=WandbLogger(
             project=project,
             name=run_name,
