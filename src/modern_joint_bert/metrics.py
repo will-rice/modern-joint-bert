@@ -21,8 +21,12 @@ def word_level_tags(
     """
     predictions = slot_logits.argmax(-1)
     mask = slot_labels != IGNORE_INDEX
-    predicted = [[slots[i] for i in row[m]] for row, m in zip(predictions, mask)]
-    gold = [[slots[i] for i in row[m]] for row, m in zip(slot_labels, mask)]
+    predicted = [
+        [slots[i] for i in row[m]] for row, m in zip(predictions, mask, strict=True)
+    ]
+    gold = [
+        [slots[i] for i in row[m]] for row, m in zip(slot_labels, mask, strict=True)
+    ]
     return predicted, gold
 
 
@@ -32,10 +36,12 @@ def compute_metrics(
     gold_tags: list[list[str]],
 ) -> dict[str, float]:
     """Compute intent accuracy, slot F1, and semantic frame (sentence) accuracy."""
-    slot_correct = [p == g for p, g in zip(predicted_tags, gold_tags)]
+    slot_correct = [p == g for p, g in zip(predicted_tags, gold_tags, strict=True)]
     return {
         "intent_acc": sum(intent_correct) / len(intent_correct),
         "slot_f1": float(f1_score(gold_tags, predicted_tags)),
-        "sentence_acc": sum(i and s for i, s in zip(intent_correct, slot_correct))
+        "sentence_acc": sum(
+            i and s for i, s in zip(intent_correct, slot_correct, strict=True)
+        )
         / len(intent_correct),
     }
