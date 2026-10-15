@@ -1,5 +1,7 @@
 """SNIPS intent and slot dataset in the JointBERT file format."""
 
+from bisect import bisect_right
+from itertools import accumulate
 from pathlib import Path
 from typing import NamedTuple
 from urllib.request import urlretrieve
@@ -82,17 +84,28 @@ class SnipsDataset(Dataset):
         return len(self.words)
 
     def __getitem__(self, index: int) -> dict[str, torch.Tensor]:
-        """Tokenize one utterance and align slot tags to first sub-tokens."""
+        """Tokenize one utterance and align slot tags to first sub-tokens.
+
+        The whole utterance is tokenized as text, so BPE tokenizers keep their
+        leading-space markers, and character offsets map sub-tokens to words.
+        """
+        words = self.words[index]
+        word_starts = list(
+            accumulate((len(word) + 1 for word in words[:-1]), initial=0)
+        )
         encoding = self.tokenizer(
-            self.words[index],
-            is_split_into_words=True,
+            " ".join(words),
             truncation=True,
             max_length=self.max_length,
+            return_offsets_mapping=True,
         )
         slot_labels = torch.full((len(encoding["input_ids"]),), IGNORE_INDEX)
         previous_word = None
-        for position, word in enumerate(encoding.word_ids()):
-            if word is not None and word != previous_word:
+        for position, (start, end) in enumerate(encoding["offset_mapping"]):
+            if end == 0:
+                continue  # special token
+            word = bisect_right(word_starts, max(end - 1, start)) - 1
+            if word != previous_word:
                 slot_labels[position] = self.labels.slots.index(self.tags[index][word])
             previous_word = word
         return {
